@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>XRay Backup Pro</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#060c1a;--panel:#0d1528;--border:#1a2a4a;
+  --accent:#00d4ff;--accent2:#0055ff;
+  --green:#00ff88;--red:#ff3366;--yellow:#ffcc00;
+  --text:#c8d8f0;--muted:#4a6080;
+  --mono:'Space Mono',monospace;--main:'Syne',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--main);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+header{display:flex;align-items:center;justify-content:space-between;padding:12px 22px;border-bottom:1px solid var(--border);background:rgba(13,21,40,.95);position:relative;z-index:10;-webkit-app-region:drag}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:34px;height:34px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px}
+.logo h1{font-size:15px;font-weight:800;letter-spacing:.06em;color:#fff}
+.logo span{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.hstatus{display:flex;align-items:center;gap:16px;-webkit-app-region:no-drag}
+.badge{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.dot.g{background:var(--green);box-shadow:0 0 7px var(--green);animation:pulse 2s infinite}
+.dot.r{background:var(--red)}
+.dot.y{background:var(--yellow);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.tabs{display:flex;padding:0 22px;background:var(--panel);border-bottom:1px solid var(--border);z-index:5}
+.tab{padding:9px 18px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;border:none;background:none;color:var(--muted);border-bottom:2px solid transparent;transition:all .2s}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab:hover:not(.active){color:var(--text)}
+.content{flex:1;overflow-y:auto;padding:18px 22px;position:relative;z-index:1}
+.page{display:none}.page.active{display:block}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.stat-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.stat-label{font-size:9px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
+.stat-value{font-size:24px;font-weight:800;color:#fff;line-height:1}
+.stat-sub{font-size:9px;color:var(--muted);margin-top:3px;font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px}
+.panel-row{display:flex;align-items:center;justify-content:space-between}
+.panel-left{display:flex;align-items:center;gap:12px}
+.panel-icon{width:38px;height:38px;border-radius:8px;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.15);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.panel-title{font-size:13px;font-weight:700;color:#fff;margin-bottom:2px}
+.panel-sub{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.btn-row{display:flex;gap:8px}
+.btn{padding:7px 14px;border-radius:6px;border:none;font-family:var(--main);font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.04em}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000}
+.btn-primary:hover{opacity:.85;transform:translateY(-1px)}
+.btn-danger{background:rgba(255,51,102,.12);border:1px solid rgba(255,51,102,.3);color:var(--red)}
+.btn-ghost{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text)}
+.btn-ghost:hover{background:rgba(255,255,255,.1)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.upload-item{display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(0,212,255,.04);border:1px solid rgba(0,212,255,.08);border-radius:8px;margin-bottom:6px;font-size:11px;animation:slideIn .3s ease}
+@keyframes slideIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.spinner{width:14px;height:14px;border:2px solid rgba(0,212,255,.2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.setup-sec{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px;margin-bottom:12px}
+.setup-sec h3{font-size:12px;font-weight:700;color:#fff;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.step-badge{width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.setup-sec p{font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.7}
+.steps-list{font-size:11px;color:var(--muted);line-height:2.2}
+.steps-list span{color:#fff;font-weight:600}
+.input-group{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.input-label{font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+input[type=text],input[type=password]{background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:6px;padding:9px 12px;color:var(--text);font-family:var(--mono);font-size:11px;width:100%;outline:none;transition:border-color .2s}
+input:focus{border-color:var(--accent)}
+.link-btn{background:none;border:none;color:var(--accent);font-family:var(--mono);font-size:11px;cursor:pointer;text-decoration:underline;padding:0}
+.alert{padding:9px 13px;border-radius:6px;font-size:11px;margin-top:10px;display:none}
+.alert.ok{background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.25);color:var(--green);display:block}
+.alert.err{background:rgba(255,51,102,.08);border:1px solid rgba(255,51,102,.25);color:var(--red);display:block}
+.log-term{background:#020608;border:1px solid var(--border);border-radius:10px;padding:12px;height:calc(100vh - 160px);overflow-y:auto;font-family:var(--mono);font-size:11px;line-height:1.9}
+.log-term .le{color:var(--muted)}.log-term .ok{color:var(--green)}.log-term .er{color:var(--red)}.log-term .inf{color:var(--accent)}.log-term .wn{color:var(--yellow)}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* Drive folder preview */
+.folder-preview{background:#020608;border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--muted);line-height:2}
+.folder-preview .f-root{color:var(--accent)}
+.folder-preview .f-date{color:var(--yellow)}
+.folder-preview .f-patient{color:var(--green)}
+.folder-preview .f-file{color:var(--muted)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🩻</div>
+    <div>
+      <h1>XRAY BACKUP PRO</h1>
+      <span>Balaji Digital X-Ray — Google Drive Auto Backup</span>
+    </div>
+  </div>
+  <div class="hstatus">
+    <div class="badge"><div class="dot" id="driveDot"></div><span id="driveText">Not Connected</span></div>
+    <div class="badge"><div class="dot" id="watchDot"></div><span id="watchText">Not Watching</span></div>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="showPage('dashboard',this)">Dashboard</button>
+  <button class="tab" onclick="showPage('setup',this)">Setup</button>
+  <button class="tab" onclick="showPage('logs',this)">Logs</button>
+</div>
+
+<div class="content">
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Aaj Upload</div>
+        <div class="stat-value" id="sToday">0</div>
+        <div class="stat-sub">X-rays today</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Backup</div>
+        <div class="stat-value" id="sTotal">0</div>
+        <div class="stat-sub">All time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Queue</div>
+        <div class="stat-value" id="sQueue">0</div>
+        <div class="stat-sub">Pending</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Last Patient</div>
+        <div class="stat-value" style="font-size:12px;padding-top:6px" id="sLastPt">—</div>
+        <div class="stat-sub" id="sLastTime">Never</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-row">
+        <div class="panel-left">
+          <div class="panel-icon">☁️</div>
+          <div>
+            <div class="panel-title">Google Drive</div>
+            <div class="panel-sub" id="driveDetail">Setup tab mein credentials daalo</div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-ghost" onclick="ipc('open-drive')">Drive Kholo</button>
+          <button class="btn btn-ghost" id="testBtn" onclick="testConn()">Test</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-row">
+        <div class="panel-left">
+          <div class="panel-icon">👁️</div>
+          <div>
+            <div class="panel-title">Folder Monitor</div>
+            <div class="panel-sub" id="watchDetail">C:\KonicaMinolta\Kim\Server\Data\Image</div>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="watchBtn" onclick="toggleWatch()">Start Watch</button>
+      </div>
+    </div>
+
+    <!-- Drive folder structure preview -->
+    <div class="panel">
+      <div class="panel-row" style="margin-bottom:8px">
+        <div class="panel-left">
+          <div class="panel-icon">📁</div>
+          <div>
+            <div class="panel-title">Google Drive Structure</div>
+            <div class="panel-sub">Patient name se folders banenge</div>
+          </div>
+        </div>
+      </div>
+      <div class="folder-preview">
+        <span class="f-root">📁 XRay_Backup_Balaji/</span><br>
+        &nbsp;&nbsp;<span class="f-date">📁 2026-06-08/</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="f-patient">📁 MR_RAMESH_KUMAR_ID1234_CHEST_PA/</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="f-file">📄 3724_0.ihd</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="f-file">📄 3724_0.Img</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="f-file">📄 3724_0.OrgImg</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="f-file">📄 3724_0.Ref</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="f-file">📄 patient_info.txt ← Name, ID, Study</span>
+      </div>
+    </div>
+
+    <!-- Auto Delete Info -->
+    <div class="panel">
+      <div class="panel-row">
+        <div class="panel-left">
+          <div class="panel-icon">🗑️</div>
+          <div>
+            <div class="panel-title">Auto Delete — 1 Saal Baad</div>
+            <div class="panel-sub" id="autoDeleteInfo">Install date load ho raha hai...</div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:var(--green);font-family:var(--mono)" id="autoDeleteStatus">Active ✅</div>
+      </div>
+    </div>
+
+    <div id="uploadList"></div>
+  </div>
+
+  <!-- SETUP -->
+  <div class="page" id="page-setup">
+    <div class="setup-sec">
+      <h3><span class="step-badge">1</span> Google Cloud Console — Project Banao</h3>
+      <button class="link-btn" onclick="openLink('https://console.cloud.google.com/')">🔗 console.cloud.google.com kholo</button>
+      <div class="steps-list" style="margin-top:10px">
+        1. Apne Google account se login karo<br>
+        2. <span>New Project</span> → Name: <span>XRayBackup</span> → Create<br>
+        3. Left menu → <span>APIs & Services → Library</span><br>
+        4. Search: <span>Google Drive API</span> → Enable<br>
+        5. Left menu → <span>APIs & Services → Credentials</span><br>
+        6. <span>+ Create Credentials → OAuth Client ID</span><br>
+        7. Consent screen: <span>External</span> → App name: <span>XRayBackup</span> → Save<br>
+        8. Application type: <span>Desktop App</span> → Create<br>
+        9. <span>Client ID aur Client Secret copy karo ✓</span>
+      </div>
+    </div>
+
+    <div class="setup-sec">
+      <h3><span class="step-badge">2</span> Credentials Paste Karo</h3>
+      <div class="input-group">
+        <label class="input-label">Client ID</label>
+        <input type="text" id="clientId" placeholder="xxxx.apps.googleusercontent.com"/>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Client Secret</label>
+        <input type="password" id="clientSecret" placeholder="GOCSPX-xxxxx"/>
+      </div>
+      <button class="btn btn-primary" onclick="genAuthUrl()">Authorization URL Banao →</button>
+    </div>
+
+    <div class="setup-sec" id="authSec" style="display:none">
+      <h3><span class="step-badge">3</span> Google Permission Do</h3>
+      <p>Niche link kholo → Google account se Allow karo → Jo code mile wo paste karo:</p>
+      <button class="link-btn" onclick="openAuthLink()">🔗 Authorization Link Kholo</button>
+      <div class="input-group" style="margin-top:12px">
+        <label class="input-label">Google se mila Code</label>
+        <input type="text" id="authCode" placeholder="4/0AX4XfWh..."/>
+      </div>
+      <button class="btn btn-primary" onclick="exchangeCode()">Google Drive Connect Karo ✓</button>
+      <div id="authAlert" class="alert"></div>
+    </div>
+
+    <div class="setup-sec">
+      <h3><span class="step-badge">4</span> Watch Folder Path</h3>
+      <p>ImagePilot ka Image folder (by default sahi hai):</p>
+      <div class="input-group">
+        <input type="text" id="watchPathInput" value="C:\KonicaMinolta\Kim\Server\Data\Image"/>
+      </div>
+      <button class="btn btn-ghost" onclick="savePath()">Path Save Karo</button>
+    </div>
+  </div>
+
+  <!-- LOGS -->
+  <div class="page" id="page-logs">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <span style="font-size:10px;color:var(--muted);font-family:var(--mono)">BACKUP LOG</span>
+      <button class="btn btn-ghost" onclick="document.getElementById('logTerm').innerHTML=''">Clear</button>
+    </div>
+    <div class="log-term" id="logTerm">
+      <div class="le">[System] XRay Backup Pro ready...</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const { ipcRenderer, shell } = require('electron');
+const { google } = require('googleapis');
+
+let watching = false;
+let authUrl = '';
+let tmpId = '', tmpSecret = '';
+
+async function init() {
+  const stats = await ipcRenderer.invoke('get-stats');
+  updateStats(stats);
+  const wp = await ipcRenderer.invoke('get-store','watchPath');
+  if(wp){ document.getElementById('watchPathInput').value=wp; document.getElementById('watchDetail').textContent=wp; }
+  const creds = await ipcRenderer.invoke('get-store','credentials');
+  if(creds) setDrive(true);
+  watching = await ipcRenderer.invoke('is-watching');
+  setWatch(watching);
+  const logs = await ipcRenderer.invoke('get-logs');
+  logs.forEach(addLog);
+
+  // Auto delete info
+  const installDate = await ipcRenderer.invoke('get-store','installDate');
+  if(installDate) {
+    const d = new Date(installDate);
+    const deleteDate = new Date(d);
+    deleteDate.setFullYear(deleteDate.getFullYear() + 1);
+    document.getElementById('autoDeleteInfo').textContent =
+      `Install: ${installDate} → 1 saal baad (${deleteDate.toISOString().split('T')[0]}) se purane folders delete honge`;
+  }
+}
+
+ipcRenderer.on('auth-status',(e,d)=>setDrive(d.connected));
+ipcRenderer.on('watch-status',(e,d)=>{ watching=d.watching; setWatch(d.watching,d.path); });
+ipcRenderer.on('upload-start',(e,d)=>showUpload(d));
+ipcRenderer.on('upload-done',(e,d)=>{ finishUpload(d); updateStats(d.stats); });
+ipcRenderer.on('queue-update',(e,d)=>document.getElementById('sQueue').textContent=d.queue);
+ipcRenderer.on('log',(e,m)=>addLog(m));
+
+function showPage(name,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  el.classList.add('active');
+}
+
+function setDrive(ok){
+  document.getElementById('driveDot').className='dot '+(ok?'g':'r');
+  document.getElementById('driveText').textContent=ok?'Drive Connected':'Not Connected';
+  document.getElementById('driveDetail').textContent=ok?'✅ Google Drive connected!':'Setup tab mein credentials daalo';
+}
+
+function setWatch(w,p){
+  watching=w;
+  document.getElementById('watchDot').className='dot '+(w?'g':'r');
+  document.getElementById('watchText').textContent=w?'Watching':'Not Watching';
+  document.getElementById('watchBtn').textContent=w?'Stop Watch':'Start Watch';
+  document.getElementById('watchBtn').className='btn '+(w?'btn-danger':'btn-primary');
+  if(p) document.getElementById('watchDetail').textContent=p;
+}
+
+function updateStats(s){
+  if(!s) return;
+  document.getElementById('sToday').textContent=s.todayUploaded||0;
+  document.getElementById('sTotal').textContent=s.totalUploaded||0;
+  if(s.lastPatient) document.getElementById('sLastPt').textContent=s.lastPatient;
+  if(s.lastUpload) document.getElementById('sLastTime').textContent=s.lastUpload;
+}
+
+function showUpload(d){
+  const list=document.getElementById('uploadList');
+  const el=document.createElement('div');
+  el.className='upload-item';
+  el.id='ri_'+d.file.replace(/[\._]/g,'x');
+  el.innerHTML=`<div class="spinner"></div>
+    <div style="flex:1">
+      <div style="color:#fff;font-weight:600">👤 ${d.patient}</div>
+      <div style="color:var(--muted);font-size:10px;font-family:var(--mono)">📄 ${d.file}</div>
+    </div>
+    <div style="font-size:10px;color:var(--yellow)">Uploading...</div>`;
+  list.prepend(el);
+}
+
+function finishUpload(d){
+  const id='ri_'+d.file.replace(/[\._]/g,'x');
+  const el=document.getElementById(id);
+  if(el){
+    el.innerHTML=`<div style="font-size:15px">✅</div>
+      <div style="flex:1">
+        <div style="color:#fff;font-weight:600">👤 ${d.patient}</div>
+        <div style="color:var(--muted);font-size:10px;font-family:var(--mono)">📁 ${d.folderName}</div>
+      </div>
+      <div style="font-size:10px;color:var(--green)">Done!</div>`;
+    setTimeout(()=>el.remove(),8000);
+  }
+}
+
+function addLog(msg){
+  const t=document.getElementById('logTerm');
+  const d=document.createElement('div');
+  let cls='le';
+  if(msg.includes('✅')) cls='ok';
+  else if(msg.includes('❌')) cls='er';
+  else if(msg.includes('⬆️')||msg.includes('👁️')||msg.includes('🔍')) cls='inf';
+  else if(msg.includes('⚠️')) cls='wn';
+  d.className=cls; d.textContent=msg;
+  t.appendChild(d);
+  t.scrollTop=t.scrollHeight;
+}
+
+async function toggleWatch(){
+  if(watching) await ipcRenderer.invoke('stop-watch');
+  else{ const p=document.getElementById('watchPathInput').value; await ipcRenderer.invoke('start-watch',p); }
+}
+
+async function testConn(){
+  const btn=document.getElementById('testBtn');
+  btn.textContent='Testing...'; btn.disabled=true;
+  const r=await ipcRenderer.invoke('test-connection');
+  btn.textContent=r.success?'✅ OK':'❌ Fail';
+  setTimeout(()=>{ btn.textContent='Test'; btn.disabled=false; },3000);
+}
+
+async function savePath(){
+  const p=document.getElementById('watchPathInput').value;
+  await ipcRenderer.invoke('set-store','watchPath',p);
+  document.getElementById('watchDetail').textContent=p;
+  alert('Path save ho gaya!');
+}
+
+function ipc(ch){ ipcRenderer.invoke(ch); }
+function openLink(u){ shell.openExternal(u); }
+
+function genAuthUrl(){
+  tmpId=document.getElementById('clientId').value.trim();
+  tmpSecret=document.getElementById('clientSecret').value.trim();
+  if(!tmpId||!tmpSecret){ alert('Client ID aur Secret dono bharo!'); return; }
+  const oa=new google.auth.OAuth2(tmpId,tmpSecret,'urn:ietf:wg:oauth:2.0:oob');
+  authUrl=oa.generateAuthUrl({ access_type:'offline', scope:['https://www.googleapis.com/auth/drive.file'], prompt:'consent' });
+  document.getElementById('authSec').style.display='block';
+}
+
+function openAuthLink(){ if(authUrl) shell.openExternal(authUrl); }
+
+async function exchangeCode(){
+  const code=document.getElementById('authCode').value.trim();
+  const al=document.getElementById('authAlert');
+  if(!code){ al.className='alert err'; al.textContent='Code bharo!'; return; }
+  try{
+    const oa=new google.auth.OAuth2(tmpId,tmpSecret,'urn:ietf:wg:oauth:2.0:oob');
+    const {tokens}=await oa.getToken(code);
+    const creds={client_id:tmpId,client_secret:tmpSecret,refresh_token:tokens.refresh_token};
+    const ok=await ipcRenderer.invoke('connect-drive',creds);
+    if(ok){
+      al.className='alert ok';
+      al.textContent='✅ Google Drive connected! Dashboard par Start Watch karo.';
+      setDrive(true);
+    } else {
+      al.className='alert err'; al.textContent='❌ Connection fail. Credentials check karo.';
+    }
+  } catch(e){
+    al.className='alert err'; al.textContent='❌ Error: '+e.message;
+  }
+}
+
+init();
+</script>
+</body>
+</html>

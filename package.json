@@ -1,0 +1,36 @@
+{
+  "name": "xray-backup-pro",
+  "version": "1.0.0",
+  "description": "Konica Minolta ImagePilot Auto Backup to Google Drive",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win --x64"
+  },
+  "dependencies": {
+    "chokidar": "^3.5.3",
+    "googleapis": "^140.0.0",
+    "electron-store": "^8.1.0"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0"
+  },
+  "build": {
+    "appId": "com.xraybackup.pro",
+    "productName": "XRay Backup Pro",
+    "directories": { "output": "dist" },
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "src/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "XRay Backup Pro"
+    },
+    "files": ["src/**/*", "node_modules/**/*", "package.json"]
+  }
+}
