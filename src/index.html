@@ -4,14 +4,15 @@
 <meta charset="UTF-8"/>
 <title>XRay Backup Pro</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap');
+/* System fonts - no internet required */
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
   --bg:#060c1a;--panel:#0d1528;--border:#1a2a4a;
   --accent:#00d4ff;--accent2:#0055ff;
   --green:#00ff88;--red:#ff3366;--yellow:#ffcc00;
   --text:#c8d8f0;--muted:#4a6080;
-  --mono:'Space Mono',monospace;--main:'Syne',sans-serif;
+  --mono: 'Consolas', 'Courier New', monospace;
+  --main: 'Segoe UI', 'Arial', sans-serif;
 }
 body{background:var(--bg);color:var(--text);font-family:var(--main);height:100vh;display:flex;flex-direction:column;overflow:hidden}
 body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
